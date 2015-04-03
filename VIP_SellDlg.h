@@ -34,9 +34,9 @@ public:
 	afx_msg void OnBnClickedBtnActivate();
 	afx_msg void OnBnClickedButRecharge();
 	afx_msg void OnBnClickedBtnQuery();
-	LONGLONG m_llongCardID;
+	UINT64 m_llongCardID;
 	CString m_strName;
-	LONGLONG m_longPhone;
+	UINT64 m_longPhone;
 };
 
 #endif

@@ -200,7 +200,7 @@ void CVIP_SellDlg::OnBnClickedBtnQuery()
 	{
 		CString strSQL;
 		char* cError;
-		strSQL.Format("select * from T_customers where id = %I64d", m_llongCardID);
+		strSQL.Format("select * from T_customers where id = %llu", m_llongCardID);
 		int nRet = sqlite3_exec(g_pDB, strSQL, LLoadSQLInfo, 0, &cError);
 		TEXTLOG("Insert T_customers -%s,Err=(%s)", strSQL, cError);
 		if(SQLITE_OK != nRet);
