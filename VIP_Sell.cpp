@@ -45,7 +45,7 @@ int initDB()
 	}
 
 	char* szError=0;
-	char szSQL[] = "create table if not exists T_customers(id INTEGER PRIMARY KEY default 0, name text, sex integer, phone integer, jointime text, birthday text, sumspent integer, balance integer, remarks text)";
+	char szSQL[] = "create table if not exists T_customers(id text PRIMARY KEY, name text, sex integer, phone text, jointime text, birthday text, sumspent integer, balance integer, remarks text)";
 	liRet = sqlite3_exec(g_pDB, szSQL, 0, 0, &szError);
 	if(SQLITE_OK != liRet)
 	{

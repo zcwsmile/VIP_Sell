@@ -106,6 +106,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ActiveCardDlg.h" />
+    <ClInclude Include="CostDlg.h" />
     <ClInclude Include="RechargeDlg.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="sqlite3.h" />
@@ -116,6 +117,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ActiveCardDlg.cpp" />
+    <ClCompile Include="CostDlg.cpp" />
     <ClCompile Include="RechargeDlg.cpp" />
     <ClCompile Include="sqlite3.c" />
     <ClCompile Include="stdafx.cpp">

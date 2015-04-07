@@ -6,6 +6,7 @@
 #include "afxdialogex.h"
 #include "ActiveCardDlg.h"
 #include "RechargeDlg.h"
+#include "CostDlg.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -48,9 +49,10 @@ END_MESSAGE_MAP()
 
 CVIP_SellDlg::CVIP_SellDlg(CWnd* pParent /*=NULL*/)
 	: CDialogEx(CVIP_SellDlg::IDD, pParent)
-	, m_llongCardID(0)
+	, m_strCardID(_T(""))
 	, m_strName(_T(""))
-	, m_longPhone(0)
+	, m_strPhone(_T(""))
+	, m_fBalance(0)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 }
@@ -58,9 +60,10 @@ CVIP_SellDlg::CVIP_SellDlg(CWnd* pParent /*=NULL*/)
 void CVIP_SellDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialogEx::DoDataExchange(pDX);
-	DDX_Text(pDX, IDC_EDIT_ID, m_llongCardID);
+	DDX_Text(pDX, IDC_EDIT_ID, m_strCardID);
 	DDX_Text(pDX, IDC_EDIT_NAME, m_strName);
-	DDX_Text(pDX, IDC_EDIT_PHONE, m_longPhone);
+	DDX_Text(pDX, IDC_EDIT_PHONE, m_strPhone);
+	DDX_Text(pDX, IDC_EDIT_BALANCE, m_fBalance);
 }
 
 BEGIN_MESSAGE_MAP(CVIP_SellDlg, CDialogEx)
@@ -70,6 +73,7 @@ BEGIN_MESSAGE_MAP(CVIP_SellDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BTN_ACTIVATE, &CVIP_SellDlg::OnBnClickedBtnActivate)
 	ON_BN_CLICKED(IDC_BUT_RECHARGE, &CVIP_SellDlg::OnBnClickedButRecharge)
 	ON_BN_CLICKED(IDC_BTN_QUERY, &CVIP_SellDlg::OnBnClickedBtnQuery)
+	ON_BN_CLICKED(IDC_BTN_COST, &CVIP_SellDlg::OnBnClickedBtnCost)
 END_MESSAGE_MAP()
 
 
@@ -164,60 +168,177 @@ void CVIP_SellDlg::OnBnClickedBtnActivate()
 {
 	// TODO: 开新卡
 	CActiveCardDlg ActiveCardDlg;      // 模态对话框显示实例
-	if(ActiveCardDlg.DoModal() != IDOK) 
+	if(ActiveCardDlg.DoModal() == IDOK)
+	{
+		m_strName = ActiveCardDlg.m_strName;
+		m_strCardID = ActiveCardDlg.m_strCardID;
+		m_strPhone = ActiveCardDlg.m_strPhone;
+		m_fBalance = ActiveCardDlg.m_flSumMoney;
+	}
+	UpdateData(FALSE);
 		return;
 }
 
 
 void CVIP_SellDlg::OnBnClickedButRecharge()
 {
-	// TODO: 在此添加控件通知处理程序代码
-	CRechargeDlg RechargeDlg;      // 模态对话框显示实例
-	if(RechargeDlg.DoModal() != IDOK)
+	// TODO: 在此添加控件通知处理程序代码;
+	
+	if (m_strCardID.IsEmpty() || m_strPhone.IsEmpty() || m_strName.IsEmpty())
+	{
+		MessageBox("请先查询出账户","Worn", MB_ICONWARNING|MB_OK);
 		return;
+	}
+	CRechargeDlg RechargeDlg;
+	if(RechargeDlg.DoModal() == IDOK)
+	{
+		if (RechargeDlg.m_fRechange < 0.01)
+		{
+			MessageBox("充值不能为 0 ","Error", MB_ICONWARNING|MB_OK);
+			return;
+		}
+
+		UINT64 utimestamp = time(NULL);
+		CString strtime = ConvertSecondTimeToString(utimestamp);
+		CString strSQL;
+		strSQL.Format("insert into T_%s(timestamp,time,product,balance,remarks) values(%llu,'%s','Recharge',%f,'Recharge充值')", \
+			m_strCardID, utimestamp, strtime, RechargeDlg.m_fRechange);
+		char* cError = NULL;
+		int nRet = sqlite3_exec(g_pDB, strSQL, 0, 0, &cError);
+		if(SQLITE_OK != nRet)
+		{
+			MessageBox("充值失败","Error", MB_ICONWARNING|MB_OK);
+			TEXTLOG("%s:%s:Error=%s",__FUNCTION__,strSQL,cError);
+			return;
+		}
+		else
+		{
+			MessageBox("充值成功！", "success",MB_ICONINFORMATION|MB_OK);
+		}
+		TEXTLOG("%s:%s:Error=%s",__FUNCTION__,strSQL,cError);
+		m_fBalance += RechargeDlg.m_fRechange;
+		UpdateData(FALSE);
+
+		//更新用户表;
+		strSQL.Format("update T_customers set balance = balance + %f where id = '%s'",RechargeDlg.m_fRechange, m_strCardID);
+		nRet = sqlite3_exec(g_pDB, strSQL, 0, 0, &cError);
+		if(SQLITE_OK != nRet)
+		{
+			MessageBox("用户表单更新失败！","Error", MB_ICONWARNING|MB_OK);
+		}
+		TEXTLOG("%s:%s:Error=%s",__FUNCTION__,strSQL,cError);
+
+	}
+
 }
 
-int LLoadSQLInfo(void* para, int n_column, char** column_value, char** column_name)
+int LoadUseInfo(void* para, int n_column, char** column_value, char** column_name)
 {
+	for(int i = 0 ; i < n_column; i ++ )
+	{
+		if (strcmp(column_name[i],"id")==0)
+		{
+			((CVIP_SellDlg *)para)->m_strCardID = column_value[i];
+		}
+		else if (strcmp(column_name[i],"name")==0)
+		{
+			((CVIP_SellDlg *)para)->m_strName = column_value[i];
+		}
+		else if (strcmp(column_name[i],"phone")==0)
+		{
+			((CVIP_SellDlg *)para)->m_strPhone = column_value[i];
+		}
+		else if(strcmp(column_name[i],"balance")==0)
+		{
+			((CVIP_SellDlg *)para)->m_fBalance = atof(column_value[i]);
+		}
+	}
 
-	//int i;
-	//printf( “记录包含 %d 个字段/n”, n_column );
-	//for( i = 0 ; i < n_column; i ++ )
-	//{
-	//	printf( “字段名:%s  字段值:%s/n”,  column_name[i], column_value[i] );
-	//}
-	//printf( “------------------/n“ );   
-
-
-	return n_column;
+	return 0;
 }
 
 void CVIP_SellDlg::OnBnClickedBtnQuery()
 {
 	// TODO: 在此添加控件通知处理程序代码
 	UpdateData(TRUE);
-	if (m_llongCardID)
+	CString strSQL;
+	char* cError;
+	if (!m_strCardID.IsEmpty())
 	{
-		CString strSQL;
-		char* cError;
-		strSQL.Format("select * from T_customers where id = %llu", m_llongCardID);
-		int nRet = sqlite3_exec(g_pDB, strSQL, LLoadSQLInfo, 0, &cError);
-		TEXTLOG("Insert T_customers -%s,Err=(%s)", strSQL, cError);
-		if(SQLITE_OK != nRet);
-		
+		//strSQL.Format("select * from T_customers where id is '%s' or name is '%s' or phone is '%s'",m_strCardID, m_strName, m_strPhone);
+		strSQL.Format("select * from T_customers where id is '%s'", m_strCardID);
+		sqlite3_exec(g_pDB, strSQL, LoadUseInfo, this, &cError);
+		TEXTLOG("%s:%s:Error=%s",__FUNCTION__,strSQL,cError);
 	}
 	else if (!m_strName.IsEmpty())
 	{
-		
+		strSQL.Format("select * from T_customers where id is '%s'", m_strName);
+		sqlite3_exec(g_pDB, strSQL, LoadUseInfo, this, &cError);
+		TEXTLOG("%s:%s:Error=%s",__FUNCTION__,strSQL,cError);
 	}
-	else if (m_longPhone)
+	else if (!m_strPhone.IsEmpty())
 	{
-		
+		strSQL.Format("select * from T_customers where id is '%s'", m_strPhone);
+		sqlite3_exec(g_pDB, strSQL, LoadUseInfo, this, &cError);
+		TEXTLOG("%s:%s:Error=%s",__FUNCTION__,strSQL,cError);
 	}
 	else
 	{
 		MessageBox("卡号、姓名、手机请至少填一个，谢谢。", "Warning", MB_ICONWARNING|MB_OK);
+		return;
 	}
+	UpdateData(FALSE);
 
 
+}
+
+void CVIP_SellDlg::OnBnClickedBtnCost()
+{
+	if (m_strCardID.IsEmpty() || m_strPhone.IsEmpty() || m_strName.IsEmpty())
+	{
+		MessageBox("请先查询出账户","Worn", MB_ICONWARNING|MB_OK);
+		return;
+	}
+	CCostDlg CostDlg;
+	if(CostDlg.DoModal() == IDOK)
+	{
+		float Balanc = m_fBalance - CostDlg.m_fCost;
+		if (Balanc < 0.001)
+		{
+			MessageBox("账户余额不足","Worn", MB_ICONWARNING|MB_OK);
+			return;
+		}
+		m_fBalance = Balanc;
+		CString strSQL;
+		char* cError;
+		UINT64 utimestamp = time(NULL);
+		CString strtime = ConvertSecondTimeToString(utimestamp);
+
+		CString Msg;
+		Msg.Format("用户%s-%s-\n添加消费 %.3f元， 余额为 %.3f元。\n请确认？",m_strName, m_strPhone, CostDlg.m_fCost, m_fBalance);
+
+		if (IDNO == MessageBox(Msg, "Warning",MB_ICONWARNING|MB_YESNO))
+		{
+			return;
+		}
+
+		strSQL.Format("insert into T_%s(timestamp,time,product,price,num,sumprice,balance,remarks)values(%llu,'%s','%s',%f,%d,%f,%f,'%s')",\
+			m_strCardID, utimestamp, strtime, CostDlg.m_strProduct, CostDlg.m_fPrice, CostDlg.m_iNum, CostDlg.m_fCost, m_fBalance, CostDlg.m_strMarks);
+		sqlite3_exec(g_pDB, strSQL, 0, 0, &cError);
+		TEXTLOG("%s:%s:Error=%s",__FUNCTION__,strSQL,cError);
+
+		//更新用户表;
+		strSQL.Format("update T_customers set balance = %f, sumspent = sumspent +%f  where id = '%s'",m_fBalance,CostDlg.m_fCost, m_strCardID);
+		int nRet = sqlite3_exec(g_pDB, strSQL, 0, 0, &cError);
+		TEXTLOG("%s:%s:Error=%s",__FUNCTION__,strSQL,cError);
+		if(SQLITE_OK != nRet)
+		{
+			MessageBox("用户表单更新失败！","Error", MB_ICONWARNING|MB_OK);
+			return;
+		}
+		MessageBox("添加消费成功！","Error", MB_ICONWARNING|MB_OK);
+		UpdateData(FALSE);
+		
+	}
+	
 }

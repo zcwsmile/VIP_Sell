@@ -25,9 +25,9 @@ protected:
 	DECLARE_MESSAGE_MAP()
 public:
 	afx_msg void OnBnClickedOk();
-	UINT64 m_longCardID;
+	CString m_strCardID;
 	CString m_strName;
-	UINT64 m_longPhone;
+	CString m_strPhone;
 	BOOL m_bWoman;
 	CTime m_CtimeBirthday;
 	CDateTimeCtrl m_CtrBirthdayTime;

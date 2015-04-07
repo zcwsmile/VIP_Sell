@@ -9,6 +9,7 @@
 class CVIP_SellDlg : public CDialogEx
 {
 // 构造
+	friend int LoadUseInfo(void* para, int n_column, char** column_value, char** column_name);
 public:
 	CVIP_SellDlg(CWnd* pParent = NULL);	// 标准构造函数
 
@@ -34,9 +35,13 @@ public:
 	afx_msg void OnBnClickedBtnActivate();
 	afx_msg void OnBnClickedButRecharge();
 	afx_msg void OnBnClickedBtnQuery();
-	UINT64 m_llongCardID;
+	//int LoadUseInfo(void* para, int n_column, char** column_value, char** column_name);
+	CString m_strCardID;
 	CString m_strName;
-	UINT64 m_longPhone;
+	CString m_strPhone;
+	float m_fBalance;
+	afx_msg void OnBnClickedButUpdate();
+	afx_msg void OnBnClickedBtnCost();
 };
 
 #endif
