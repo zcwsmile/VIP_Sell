@@ -49,15 +49,15 @@ void CRechargeDlg::OnBnClickedOk()
 	UINT64 utimestamp = time(NULL);
 	CString strtime = ConvertSecondTimeToString(utimestamp);
 	CString strSQL;
-	strSQL.Format("insert into T_%llu(timestamp,time,product,balance,remarks) values(%llu,'%s','Recharge',%f,'充值')", \
-		m_longCardID, utimestamp, strtime, m_fRechange);
-	char* cError = NULL;
-	int nRet = sqlite3_exec(g_pDB, strSQL, 0, 0, &cError);
-	if(SQLITE_OK != nRet)
-	{
-		MessageBox("Insert useIDTable failed::CRechargeDlg::OnBnClickedOk","Error", MB_ICONWARNING|MB_OK);
-		return;
-	}
+	//strSQL.Format("insert into T_%llu(timestamp,time,product,balance,remarks) values(%llu,'%s','Recharge',%f,'充值')", \
+	//	m_longCardID, utimestamp, strtime, m_fRechange);
+	//char* cError = NULL;
+	//int nRet = sqlite3_exec(g_pDB, strSQL, 0, 0, &cError);
+	//if(SQLITE_OK != nRet)
+	//{
+	//	MessageBox("Insert useIDTable failed::CRechargeDlg::OnBnClickedOk","Error", MB_ICONWARNING|MB_OK);
+	//	return;
+	//}
 	MessageBox("充值成功！", "success",MB_ICONINFORMATION|MB_OK);
 
 	CDialog::OnOK();
