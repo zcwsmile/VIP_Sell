@@ -46,6 +46,7 @@
     <ExecutablePath>$(ExecutablePath)</ExecutablePath>
     <OutDir>./Bin</OutDir>
     <ReferencePath>$(ReferencePath)</ReferencePath>
+    <EmbedManifest>true</EmbedManifest>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
