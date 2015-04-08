@@ -1,6 +1,7 @@
 // VIP_SellDlg.h : 头文件
 #ifndef _VIP_SELLDLG_H_
 #define _VIP_SELLDLG_H_
+#include "afxcmn.h"
 
 #pragma once
 
@@ -9,7 +10,6 @@
 class CVIP_SellDlg : public CDialogEx
 {
 // 构造
-	friend int LoadUseInfo(void* para, int n_column, char** column_value, char** column_name);
 public:
 	CVIP_SellDlg(CWnd* pParent = NULL);	// 标准构造函数
 
@@ -35,13 +35,16 @@ public:
 	afx_msg void OnBnClickedBtnActivate();
 	afx_msg void OnBnClickedButRecharge();
 	afx_msg void OnBnClickedBtnQuery();
-	//int LoadUseInfo(void* para, int n_column, char** column_value, char** column_name);
 	CString m_strCardID;
 	CString m_strName;
 	CString m_strPhone;
 	float m_fBalance;
 	afx_msg void OnBnClickedButUpdate();
 	afx_msg void OnBnClickedBtnCost();
+	void UpdateCheckList();
+	void InitClear();
+	CListCtrl m_ctrListCheck;
+	int m_iNumindex;
 };
 
 #endif

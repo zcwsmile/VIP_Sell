@@ -57,7 +57,7 @@ void CActiveCardDlg::OnBnClickedOk()
 		return;
 	}
 	CString Msg;
-	Msg.Format("%s-%s-激活,余额%.3f元。\n请确认？",m_strName,m_strPhone,m_flSumMoney);
+	Msg.Format("%s - %s - 激活,\n充值金额 %.3f元。\n请确认？",m_strName,m_strPhone,m_flSumMoney);
 
 	if (IDNO == MessageBox(Msg, "Warning",MB_ICONWARNING|MB_YESNO))
 	{
@@ -69,7 +69,7 @@ void CActiveCardDlg::OnBnClickedOk()
 	strBirthDay.Format("%d-%d",m_CtimeBirthday.GetMonth(), m_CtimeBirthday.GetDay());
 	char* cError=NULL;
 	CString strSQL;
-	strSQL.Format("insert into T_customers values('%s', '%s', %d, '%s', '%s', '%s', 0, %f, '%s')", \
+	strSQL.Format("insert into T_customers values('%s', '%s', %d, '%s', '%s', '%s', 0, %.3f, '%s')", \
 		m_strCardID, m_strName, (int)m_bWoman, m_strPhone, strJointime, strBirthDay, m_flSumMoney, m_strMarket);
 	int nRet = sqlite3_exec(g_pDB, strSQL, 0, 0, &cError);
 	TEXTLOG("Insert T_customers -%s,Err=(%s)", strSQL, cError);
@@ -79,7 +79,7 @@ void CActiveCardDlg::OnBnClickedOk()
 		return;
 	}
 	strSQL.Format("create table if not exists T_%s(timestamp INTEGER PRIMARY KEY default 0, time text, \
-				  product text, price integer, num integer, sumprice integer, balance integer, remarks text)", m_strCardID);
+				  product text, price real, num integer,sale real, sumprice real, balance real, remarks text)", m_strCardID);
 	//sumprice 消费总额     balance 账号余额;
 	nRet = sqlite3_exec(g_pDB, strSQL, 0, 0, &cError);
 	TEXTLOG("create T_CardID -%s,Err=(%s)", strSQL, cError);
@@ -88,7 +88,7 @@ void CActiveCardDlg::OnBnClickedOk()
 		MessageBox("create T_CardID failed！", "Error",MB_ICONWARNING|MB_OK);
 		return;
 	}
-	strSQL.Format("insert into T_%s(timestamp,time,product,balance,remarks) values(%llu,'%s','Recharge',%f,'start充值办卡')", \
+	strSQL.Format("insert into T_%s(timestamp,time,product,balance,remarks) values(%llu,'%s','Recharge',%.3f,'充值办卡')", \
 		m_strCardID, utimestamp, strJointime, m_flSumMoney);
 	nRet = sqlite3_exec(g_pDB, strSQL, 0, 0, &cError);
 	if(SQLITE_OK != nRet)

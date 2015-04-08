@@ -46,7 +46,7 @@ BEGIN_MESSAGE_MAP(CCostDlg, CDialog)
 END_MESSAGE_MAP()
 
 
-// CCostDlg 消息处理程序
+// CCostDlg 消息处理程序5
 
 
 void CCostDlg::OnBnClickedOk()
@@ -58,7 +58,7 @@ void CCostDlg::OnBnClickedOk()
 		MessageBox("实际消费额不能为空~！","Worn", MB_ICONWARNING|MB_OK);
 		return;
 	}
-	TEXTLOG("%s,product=%s,price=%f,num=%d,sale=%f,sum=%f,cost=%f,mark=%s",__FUNCTION__,\
+	TEXTLOG("%s,product=%s,price=%.3f,num=%d,sale=%.3f,sum=%.3f,cost=%.3f,mark=%s",__FUNCTION__,\
 		m_strProduct,m_fPrice,m_iNum,m_fSale,m_fSum,m_fCost,m_strMarks);
 	CDialog::OnOK();
 }
